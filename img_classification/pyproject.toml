@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "img-classification"
+version = "0.1.0"
+description = ""
+authors = ["KeremDilmen <krmdlmn03@gmail.com>"]
+readme = "README.md"
+packages = [{include = "img_classification"}]
+
+[tool.poetry.dependencies]
+python = ">=3.8, <3.10"
+tensorflow = "^2.13.0"
+matplotlib = "^3.7.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
