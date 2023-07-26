@@ -2,101 +2,110 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 import os
+import pickle as pk
 
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 
 current_directory = os.path.join(os.path.dirname(__file__))
-data_dir = os.path.join(current_directory, "rooms")
-
-batch_size = 3
 img_height = 180
 img_width = 180
+class_names = ['bathroom', 'bedroom', 'kitchen', 'living_room']
 
-train_ds = tf.keras.utils.image_dataset_from_directory(
-  data_dir,
-  validation_split=0.2,
-  subset="training",
-  seed=123,
-  image_size=(img_height, img_width),
-  batch_size=batch_size)
+def train():
+  current_directory = os.path.join(os.path.dirname(__file__))
+  data_dir = os.path.join(current_directory, "rooms")
 
-val_ds = tf.keras.utils.image_dataset_from_directory(
-  data_dir,
-  validation_split=0.2,
-  subset="validation",
-  seed=123,
-  image_size=(img_height, img_width),
-  batch_size=batch_size)
+  batch_size = 3
+  
 
-class_names = train_ds.class_names
+  train_ds = tf.keras.utils.image_dataset_from_directory(
+    data_dir,
+    validation_split=0.2,
+    subset="training",
+    seed=123,
+    image_size=(img_height, img_width),
+    batch_size=batch_size)
 
-AUTOTUNE = tf.data.AUTOTUNE
+  val_ds = tf.keras.utils.image_dataset_from_directory(
+    data_dir,
+    validation_split=0.2,
+    subset="validation",
+    seed=123,
+    image_size=(img_height, img_width),
+    batch_size=batch_size)
 
-train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
-val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+  class_names = train_ds.class_names
+  print(class_names)
 
-num_classes = len(class_names)
+  AUTOTUNE = tf.data.AUTOTUNE
 
-data_augmentation = keras.Sequential(
-  [
-    layers.RandomFlip("horizontal",
-                      input_shape=(img_height,
-                                  img_width,
-                                  3)),
-    layers.RandomRotation(0.1),
-    layers.RandomZoom(0.1),
-  ]
-)
+  train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
+  val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
 
-model = Sequential([
-  data_augmentation,
-  layers.Rescaling(1./255),
-  layers.Conv2D(16, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-  layers.Conv2D(32, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-  layers.Conv2D(64, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-  layers.Dropout(0.2),
-  layers.Flatten(),
-  layers.Dense(128, activation='relu'),
-  layers.Dense(num_classes, name="outputs")
-])
+  num_classes = len(class_names)
 
-model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
+  data_augmentation = keras.Sequential(
+    [
+      layers.RandomFlip("horizontal",
+                        input_shape=(img_height,
+                                    img_width,
+                                    3)),
+      layers.RandomRotation(0.1),
+      layers.RandomZoom(0.1),
+    ]
+  )
 
-epochs = 50
-history = model.fit(
-  train_ds,
-  validation_data=val_ds,
-  epochs=epochs
-)
+  model = Sequential([
+    data_augmentation,
+    layers.Rescaling(1./255),
+    layers.Conv2D(16, 3, padding='same', activation='relu'),
+    layers.MaxPooling2D(),
+    layers.Conv2D(32, 3, padding='same', activation='relu'),
+    layers.MaxPooling2D(),
+    layers.Conv2D(64, 3, padding='same', activation='relu'),
+    layers.MaxPooling2D(),
+    layers.Dropout(0.2),
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dense(num_classes, name="outputs")
+  ])
 
-acc = history.history['accuracy']
-val_acc = history.history['val_accuracy']
+  model.compile(optimizer='adam',
+                loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                metrics=['accuracy'])
 
-loss = history.history['loss']
-val_loss = history.history['val_loss']
+  epochs = 50
+  history = model.fit(
+    train_ds,
+    validation_data=val_ds,
+    epochs=epochs
+  )
 
-epochs_range = range(epochs)
+  acc = history.history['accuracy']
+  val_acc = history.history['val_accuracy']
 
-plt.figure(figsize=(8, 8))
-plt.subplot(1, 2, 1)
-plt.plot(epochs_range, acc, label='Training Accuracy')
-plt.plot(epochs_range, val_acc, label='Validation Accuracy')
-plt.legend(loc='lower right')
-plt.title('Training and Validation Accuracy')
+  loss = history.history['loss']
+  val_loss = history.history['val_loss']
 
-plt.subplot(1, 2, 2)
-plt.plot(epochs_range, loss, label='Training Loss')
-plt.plot(epochs_range, val_loss, label='Validation Loss')
-plt.legend(loc='upper right')
-plt.title('Training and Validation Loss')
-plt.show()
+  epochs_range = range(epochs)
+
+  plt.figure(figsize=(8, 8))
+  plt.subplot(1, 2, 1)
+  plt.plot(epochs_range, acc, label='Training Accuracy')
+  plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+  plt.legend(loc='lower right')
+  plt.title('Training and Validation Accuracy')
+
+  plt.subplot(1, 2, 2)
+  plt.plot(epochs_range, loss, label='Training Loss')
+  plt.plot(epochs_range, val_loss, label='Validation Loss')
+  plt.legend(loc='upper right')
+  plt.title('Training and Validation Loss')
+  plt.show()
+
+  return model
 
 # def test(url, name):
 #     path = tf.keras.utils.get_file(name, origin=url)
@@ -118,6 +127,12 @@ plt.show()
 #     .format(class_names[np.argmax(score)], 100 * np.max(score))
 #     )
 
+model_dir = os.path.join(current_directory, "saved_model")
+if not os.path.exists(model_dir):
+  model = train()
+  model.save('saved_model')
+else:
+  model = tf.keras.models.load_model('saved_model')
 
 def test2(path):
     img = img = tf.keras.utils.load_img(
@@ -135,6 +150,7 @@ def test2(path):
     "This image most likely belongs to {} with a {:.2f} percent confidence."
     .format(class_names[np.argmax(score)], 100 * np.max(score))
     )
+
 #test_1
 path = os.path.join(current_directory, "rooms/bedroom/bedroom_1.jpeg")
 test2(path)
