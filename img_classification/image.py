@@ -149,3 +149,15 @@ test(path)
 
 path = os.path.join(current_directory, "bathroom_test.jpeg")
 test(path)
+
+def predict_category(image):
+    img_array = tf.keras.utils.img_to_array(image)
+    img_array = tf.expand_dims(img_array, 0)  # Create a batch
+
+    predictions = model.predict(img_array)
+    score = tf.nn.softmax(predictions[0])
+
+    predicted_label = label_list[np.argmax(score)]
+    confidence = 100 * np.max(score)
+    
+    return predicted_label, confidence
