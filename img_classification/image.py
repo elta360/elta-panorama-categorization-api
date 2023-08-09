@@ -7,9 +7,9 @@ import os
 import json
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.python.keras import layers
-from tensorflow.python.keras.models import Sequential
-from tensorflow.python.keras.layers.experimental.preprocessing import Resizing
+from tensorflow.keras import layers
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers.experimental.preprocessing import Resizing
 
 img_height = 180
 img_width = 180
